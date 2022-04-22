@@ -5,6 +5,7 @@ import logging
 import time
 
 import chess.pgn
+import click
 import requests
 
 
@@ -139,12 +140,22 @@ fens_dict = {
         "caro_b": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
 }
 
-
-def analyze_fen(FEN, number_of_games = 5):
+@click.command()
+@click.option("--num-games", default=40)
+@click.option("--fen", default="", help="FEN for starting positon, or name of a FEN in the intenal fens dict.")
+@click.option("--speed", default="rapid")
+@click.option("--rating", default="2000")
+def analyze_fen(fen, num_games, speed, rating):
+    if fen in fens_dict:
+        final_fen = fens_dict[fen]
+    elif fen == "":
+        final_fen = input("FEN:")
+    else:
+        final_fen = fen
     depths = []
-    while len(depths) < number_of_games:
+    while len(depths) < num_games:
         try:
-            board, _ = run_game(FEN, "rapid", "2000")
+            board, _ = run_game(final_fen, speed, rating)
             depths.append(board.fullmove_number - 1)
         except:
             logging.exception("Something went wrong.")
@@ -161,6 +172,5 @@ def print_endpoint(board):
     print(f"{last_player} went entirely out of book on move {board.fullmove_number}")
     print(board)
 
-
-analyze_fen(fens_dict["scotch_w"], number_of_games = 5)
-analyze_fen(fens_dict["ruy_w"], number_of_games = 5)
+if __name__ == "__main__":
+    analyze_fen()
